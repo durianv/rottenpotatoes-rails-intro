@@ -2,6 +2,7 @@ class MoviesController < ApplicationController
 
   def movie_params
     params.require(:movie).permit(:title, :rating, :description, :release_date, :ratings)
+    
   end
   
   
@@ -16,24 +17,31 @@ class MoviesController < ApplicationController
     @all_ratings = Movie.all_ratings
     @check_ratings = params[:ratings] || {}
     
-    if @check_ratings == {}
-      @check_ratings = @all_ratings
-    else
-        @check_ratings = @check_ratings.keys
-      
-    end
-    
-    #@movies = Movie.all
-    @movies = Movie.where(:rating => @check_ratings)
-    
     if params[:sort] == 'title'
-      @movies = Movie.order(:title).all
+      session[:sort] = 'title'
       
     elsif params[:sort] == 'release_date'
-      @movies = Movie.order(:release_date).all
-      
+      session[:sort] = 'release_date'
+    
     end
     
+    if @check_ratings == {}
+      
+      if session[:ratings] != {}
+        flash.keep
+        redirect_to movies_path(:ratings => session[:ratings], :sort => session[:sort])
+      else
+        @check_ratings = @all_ratings
+      end
+      
+    elsif @check_ratings.class != Array
+      
+      @check_ratings = @check_ratings.keys
+    end
+    
+    session[:ratings] = @check_ratings
+
+    @movies = Movie.where(:rating => @check_ratings).order(params[:sort]).all
     
     
   end
